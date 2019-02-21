@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -24,19 +25,31 @@ public class ItemControl {
     @RequestMapping(value = "/getItems", method = RequestMethod.GET)
     public ArrayList<ItemInfo> getItems(String words) {
 
-        ArrayList<ItemInfo> itemInfos = new ArrayList<>();
-        //查询索引表
-        Result result = dao.getOneRow("index", DigestUtils.md5Hex(words).toUpperCase());
+        ArrayList<String> list = new ArrayList<String>();
 
-        if (result.isEmpty()){
-            return itemInfos;
+        int flag = 0;
+        ArrayList<ItemInfo> itemInfos = new ArrayList<>();
+        for (String word : words.split(" ")) {
+            //查询索引表
+            Result result = dao.getOneRow("index", DigestUtils.md5Hex(word).toUpperCase());
+            if (!result.isEmpty()){
+                Cell cell = result.listCells().get(0);
+                String ids = Bytes.toString(CellUtil.cloneValue(cell));
+                flag++;
+                System.out.println(ids);
+                if (flag == 1) {
+                    list.addAll(Arrays.asList(ids.split("_")));
+                } else {
+                    //retainAll  取两个集合的交集，结果放在前面集合里面
+                    list.retainAll(Arrays.asList(ids.split("_")));
+                }
+            }
         }
 
-        Cell cell = result.listCells().get(0);
-        String ids = Bytes.toString(CellUtil.cloneValue(cell));
+        System.out.println(list);
 
 
-        for (String id : ids.split("_")) {
+        for (String id : list) {
 
             ItemInfo itemInfo = new ItemInfo();
 
@@ -44,28 +57,28 @@ public class ItemControl {
             for (Cell cell1 : item_info.listCells()) {
                 String qualifier = Bytes.toString(CellUtil.cloneQualifier(cell1));
                 String value = Bytes.toString(CellUtil.cloneValue(cell1));
-                if ("price".equals(qualifier)){
+                if ("price".equals(qualifier)) {
                     itemInfo.setPrice(value);
                 }
-                if ("StockStateName".equals(qualifier)){
+                if ("StockStateName".equals(qualifier)) {
                     itemInfo.setStockStateName(value);
                 }
-                if ("vender".equals(qualifier)){
+                if ("vender".equals(qualifier)) {
                     itemInfo.setVender(value);
                 }
-                if ("website".equals(qualifier)){
+                if ("website".equals(qualifier)) {
                     itemInfo.setWebsite(value);
                 }
-                if ("url".equals(qualifier)){
+                if ("url".equals(qualifier)) {
                     itemInfo.setUrl(value);
                 }
-                if ("productColor".equals(qualifier)){
+                if ("productColor".equals(qualifier)) {
                     itemInfo.setProductColor(value);
                 }
-                if ("productSize".equals(qualifier)){
+                if ("productSize".equals(qualifier)) {
                     itemInfo.setProductSize(value);
                 }
-                if ("name".equals(qualifier)){
+                if ("name".equals(qualifier)) {
                     itemInfo.setName(value);
                 }
             }
